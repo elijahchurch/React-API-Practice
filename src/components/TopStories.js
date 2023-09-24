@@ -1,10 +1,19 @@
-import React, { useState, useEffect} from "react";
+import React, { useReducer, useEffect} from "react";
+import topStoriesReducer from "./../reducers/top-stories-reducer";
+import { getTopStoriesFailure, getTopStoriesSuccess } from "../actions/index";
+
+// Initial State created before function
+
+const initialState = {
+    isLoaded: false,
+    topStories: [],
+    error: null
+};
 
 function TopStories() {
-    const [error, setError] = useState(null);
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [topStories, setTopStories] = useState([]);
-
+    // Initialize the useReducer hook
+    const[state, dispatch] = useReducer(topStoriesReducer, initialState)
+    
     useEffect(() => {
         fetch(`https://api.nytimes.com/svc/topstories/v2/home.json?api-key=${process.env.REACT_APP_API_KEY}`)
             .then(response => {
@@ -15,14 +24,16 @@ function TopStories() {
                 }
             })
             .then((jsonifiedResponse) => {
-                setTopStories(jsonifiedResponse.results)
-                setIsLoaded(true);
+                const action = getTopStoriesSuccess(jsonifiedResponse.results);
+                dispatch(action);
             })
             .catch((error) => {
-                setError(error.message)
-                setIsLoaded(true)
+                const action2 = getTopStoriesFailure(error.message);
+                dispatch(action2);
             });
     }, [])
+
+    const { error, isLoaded, topStories} = state;
 
     if (error) {
         return <h1>Error : {error}</h1>
